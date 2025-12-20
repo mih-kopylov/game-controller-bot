@@ -5,15 +5,19 @@ import (
 	"fmt"
 	"game-controller-bot/internal/botcommand"
 	"game-controller-bot/internal/tgbot"
+	"log"
 )
 
-var ErrFailedToStartBot = errors.New("failed to start bot")
+var ErrFailedToCreateBot = errors.New("failed to create bot")
 
-func StartBot() error {
+func StartBot(version string) error {
+	log.Printf("Starting application with version %v\n", version)
 	bot, err := tgbot.NewTgBot()
 	if err != nil {
-		return fmt.Errorf("%w: %w", ErrFailedToStartBot, err)
+		return fmt.Errorf("%w: %w", ErrFailedToCreateBot, err)
 	}
+
+	bot.StartSelfUpdate(version)
 
 	bot.AddCommand(botcommand.NewStartCommand(bot.Context))
 

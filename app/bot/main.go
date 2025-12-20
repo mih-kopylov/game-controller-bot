@@ -5,8 +5,10 @@ import (
 	"log"
 )
 
+var version = "0.0.0"
+
 func main() {
-	err := internal.StartBot()
+	err := internal.StartBot(version)
 	if err != nil {
 		log.Fatal(err)
 	}
