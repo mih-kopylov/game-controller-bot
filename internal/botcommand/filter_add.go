@@ -26,9 +26,7 @@ func (c *FilterAddCommand) GetDescription() string {
 
 func (c *FilterAddCommand) GetHandleFunc() telebot.HandlerFunc {
 	return func(context telebot.Context) error {
-		for _, arg := range context.Args() {
-			c.context.NamesFilter = append(c.context.NamesFilter, arg)
-		}
+		c.context.NamesFilter = append(c.context.NamesFilter, context.Args()...)
 
 		return NewUserListCommand(c.context).GetHandleFunc()(context)
 	}
