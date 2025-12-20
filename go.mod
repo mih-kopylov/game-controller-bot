@@ -1,6 +1,6 @@
 module game-controller-bot
 
-go 1.25.4
+go 1.25.5
 
 require (
 	github.com/shirou/gopsutil/v4 v4.25.11
