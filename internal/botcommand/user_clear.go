@@ -26,7 +26,17 @@ func (c *UserClearCommand) GetDescription() string {
 
 func (c *UserClearCommand) GetHandleFunc() telebot.HandlerFunc {
 	return func(context telebot.Context) error {
-		c.context.SystemUser = ""
+		data, err := c.context.Read()
+		if err != nil {
+			return err
+		}
+
+		data.ClearSystemUser()
+		err = c.context.Write(data)
+		if err != nil {
+			return err
+		}
+
 		return context.Send("Пользователь очищен")
 	}
 }

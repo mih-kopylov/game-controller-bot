@@ -26,7 +26,16 @@ func (c *FilterAddCommand) GetDescription() string {
 
 func (c *FilterAddCommand) GetHandleFunc() telebot.HandlerFunc {
 	return func(context telebot.Context) error {
-		c.context.NamesFilter = append(c.context.NamesFilter, context.Args()...)
+		data, err := c.context.Read()
+		if err != nil {
+			return err
+		}
+
+		data.AddNames(context.Args())
+		err = c.context.Write(data)
+		if err != nil {
+			return err
+		}
 
 		return NewUserListCommand(c.context).GetHandleFunc()(context)
 	}
