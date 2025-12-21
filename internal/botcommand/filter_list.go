@@ -28,13 +28,18 @@ func (c *FilterListCommand) GetDescription() string {
 
 func (c *FilterListCommand) GetHandleFunc() telebot.HandlerFunc {
 	return func(context telebot.Context) error {
-		if len(c.context.NamesFilter) == 0 {
+		data, err := c.context.Read()
+		if err != nil {
+			return err
+		}
+
+		if len(data.NamesToKill) == 0 {
 			return context.Send("Фильтр пуст")
 		}
 
 		message := strings.Builder{}
 		message.WriteString("Текущий фильтр:\n")
-		for _, filter := range c.context.NamesFilter {
+		for _, filter := range data.NamesToKill {
 			message.WriteString(fmt.Sprintf("%v\n", filter))
 		}
 		return context.Send(message.String())

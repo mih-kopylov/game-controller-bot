@@ -27,13 +27,48 @@ func (c *StartCommand) GetDescription() string {
 
 func (c *StartCommand) GetHandleFunc() telebot.HandlerFunc {
 	return func(context telebot.Context) error {
-		admin := context.Sender()
-		c.context.Admin = admin
-		err := context.Send(fmt.Sprintf("Hello, %v (%v)", admin.Username, admin.ID))
+		data, err := c.context.Read()
 		if err != nil {
 			return err
 		}
 
-		return nil
+		user := context.Sender()
+		switch {
+		case len(data.Admins) == 0:
+			data.AddAdmin(user.ID)
+			err = c.context.Write(data)
+			if err != nil {
+				return err
+			}
+
+			return context.Send(
+				fmt.Sprintf(
+					`Привет, %v! 
+Ты - первый пользователь бота, теперь ты его администратор.
+Управляй им мудро!`,
+					user.Username,
+				),
+			)
+
+		case data.IsAdmin(user.ID):
+			return context.Send(
+				fmt.Sprintf(
+					`Привет, %v!
+Ты - администратор этого бота.
+Управляй им мудро!`, user.Username,
+				),
+			)
+
+		default:
+			return context.Send(
+				fmt.Sprintf(
+					`Привет, %v!
+Ты - не администратор этого бота.
+Для того, чтобы управлять им, попроси администратора выдать тебе права.
+`, user.Username,
+				),
+			)
+
+		}
 	}
 }

@@ -30,6 +30,11 @@ func (c *ProcessListCommand) GetDescription() string {
 
 func (c *ProcessListCommand) GetHandleFunc() telebot.HandlerFunc {
 	return func(context telebot.Context) error {
+		data, err := c.context.Read()
+		if err != nil {
+			return err
+		}
+
 		grep := ""
 		if len(context.Args()) == 1 {
 			grep = strings.ToLower(context.Args()[0])
@@ -46,10 +51,10 @@ func (c *ProcessListCommand) GetHandleFunc() telebot.HandlerFunc {
 			processUsername, _ := p.Username()
 			terminal, _ := p.Terminal()
 			parentPid, _ := p.Ppid()
-			if len(c.context.NamesFilter) > 0 && !slices.Contains(c.context.NamesFilter, strings.ToLower(processName)) {
+			if len(data.NamesToKill) > 0 && !slices.Contains(data.NamesToKill, strings.ToLower(processName)) {
 				continue
 			}
-			if c.context.SystemUser != "" && processUsername != c.context.SystemUser {
+			if data.SystemUser != "" && processUsername != data.SystemUser {
 				continue
 			}
 			if grep != "" && !strings.Contains(strings.ToLower(processName), grep) {

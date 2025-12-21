@@ -33,14 +33,12 @@ func NewTgBot() (*TgBot, error) {
 		Token:  os.Getenv("CONTROLLER_BOT_TOKEN"),
 		Poller: &telebot.LongPoller{Timeout: 10 * time.Second},
 		OnError: func(err error, context telebot.Context) {
+			log.Println(fmt.Errorf("failed to handle: %w", err))
 			if context != nil {
-				err2 := context.Send(err.Error())
+				err2 := context.Send(fmt.Sprintf("Ошибка: %v", err.Error()))
 				if err2 != nil {
 					log.Println("Failed to send error response", err2)
-					log.Println("Cause error", err)
 				}
-			} else {
-				log.Println("Failed to handle", err)
 			}
 		},
 	}

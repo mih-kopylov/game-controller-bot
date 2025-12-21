@@ -2,7 +2,6 @@ package botcommand
 
 import (
 	"game-controller-bot/internal/botcontext"
-	"slices"
 
 	"gopkg.in/telebot.v4"
 )
@@ -27,11 +26,15 @@ func (c *FilterRemoveCommand) GetDescription() string {
 
 func (c *FilterRemoveCommand) GetHandleFunc() telebot.HandlerFunc {
 	return func(context telebot.Context) error {
-		for _, arg := range context.Args() {
-			index := slices.Index(c.context.NamesFilter, arg)
-			if index >= 0 {
-				c.context.NamesFilter = slices.Delete(c.context.NamesFilter, index, index+1)
-			}
+		data, err := c.context.Read()
+		if err != nil {
+			return err
+		}
+
+		data.RemoveNames(context.Args())
+		err = c.context.Write(data)
+		if err != nil {
+			return err
 		}
 
 		return NewUserListCommand(c.context).GetHandleFunc()(context)
