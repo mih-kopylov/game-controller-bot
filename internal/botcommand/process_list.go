@@ -105,7 +105,7 @@ func (c *ProcessListCommand) readAllProcesses(data *botcontext.Data, grep string
 			if a.Name != b.Name {
 				return strings.Compare(a.Name, b.Name)
 			}
-			return 0
+			return int(a.Pid - b.Pid)
 		},
 	)
 	return allProcesses, nil
