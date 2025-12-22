@@ -6,6 +6,7 @@ require (
 	github.com/creativeprojects/go-selfupdate v1.5.2
 	github.com/shirou/gopsutil/v4 v4.25.11
 	gopkg.in/telebot.v4 v4.0.0-beta.7
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -27,10 +28,9 @@ require (
 	github.com/tklauser/numcpus v0.11.0 // indirect
 	github.com/ulikunitz/xz v0.5.15 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
-	gitlab.com/gitlab-org/api/client-go v1.9.1 // indirect
+	gitlab.com/gitlab-org/api/client-go v1.10.0 // indirect
 	golang.org/x/crypto v0.46.0 // indirect
 	golang.org/x/oauth2 v0.34.0 // indirect
 	golang.org/x/sys v0.39.0 // indirect
 	golang.org/x/time v0.14.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
