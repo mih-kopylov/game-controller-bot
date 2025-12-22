@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"game-controller-bot/internal/botcommand"
 	"game-controller-bot/internal/botcontext"
+	"game-controller-bot/internal/proc"
 	"log"
 	"os"
 	"os/exec"
@@ -21,6 +22,7 @@ import (
 var ErrWrongBotToken = errors.New("wrong telegram bot token")
 var ErrFailedToSetCommands = errors.New("failed to set up bot commands")
 var ErrFailedToSelfUpdate = errors.New("failed to self update bot")
+var ErrFailedToWatchProcesses = errors.New("failed to watch processes")
 
 type TgBot struct {
 	bot      *telebot.Bot
@@ -112,6 +114,27 @@ func (b *TgBot) StartSelfUpdate(version string) {
 	}()
 }
 
+func (b *TgBot) StartProcessesWatch() {
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		ticker := time.NewTicker(10 * time.Second)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ticker.C:
+				err := b.watchProcesses()
+				if err != nil {
+					log.Println(fmt.Errorf("%w: %w", ErrFailedToWatchProcesses, err))
+				}
+			case <-quit:
+				return
+			}
+		}
+	}()
+}
+
 func (b *TgBot) selfUpdate(version string) error {
 	latest, found, err := selfupdate.DetectLatest(
 		context.Background(), selfupdate.ParseSlug("mih-kopylov/game-controller-bot"),
@@ -132,16 +155,50 @@ func (b *TgBot) selfUpdate(version string) error {
 	if err != nil {
 		return fmt.Errorf("could not locate executable path: %w", err)
 	}
+
 	err = selfupdate.UpdateTo(context.Background(), latest.AssetURL, latest.AssetName, exe)
 	if err != nil {
 		return fmt.Errorf("error occurred while updating binary: %w", err)
 	}
+
 	cmd := exec.Command(os.Args[0], os.Args[1:]...)
 	err = cmd.Start()
 	if err != nil {
 		return fmt.Errorf("failed to start new binary version: %w", err)
 	}
+
 	log.Printf("Successfully updated to version %s, so exit\n", latest.Version())
 	os.Exit(0)
+	return nil
+}
+
+func (b *TgBot) watchProcesses() error {
+	data, err := b.Context.Read()
+	if err != nil {
+		return err
+	}
+
+	if len(data.NamesToKill) == 0 {
+		return nil
+	}
+
+	processes, err := proc.ReadAllProcesses(data.NamesToKill, "", data.SystemUser)
+	if err != nil {
+		return err
+	}
+
+	for _, p := range processes {
+		log.Println(fmt.Sprintf("Process found %v (pid=%v)", p.Name, p.Pid))
+		err = proc.TermiateProcess(p.Pid)
+		if err != nil {
+			return err
+		}
+		log.Println(fmt.Sprintf("Process %v (pid=%v) is terminated", p.Name, p.Pid))
+		// Stopping loop because usually processes contains a process tree, where the first one is the root one
+		// When first is over, others disappear as well, and no need to look for them
+		// Next tick another process will be taken
+		return nil
+	}
+
 	return nil
 }

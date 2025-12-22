@@ -1,12 +1,13 @@
 package botcommand
 
 import (
+	"errors"
 	"fmt"
 	"game-controller-bot/internal/botcontext"
+	"game-controller-bot/internal/proc"
 	"strconv"
 	"strings"
 
-	"github.com/shirou/gopsutil/v4/process"
 	"gopkg.in/telebot.v4"
 )
 
@@ -43,16 +44,15 @@ func (c *ProcessTerminateCommand) GetHandleFunc() telebot.HandlerFunc {
 		}
 
 		for _, pid := range pids {
-			proc, err := process.NewProcess(pid)
-			if err != nil {
+			err := proc.TermiateProcess(pid)
+			if errors.Is(err, proc.ErrProcessNotFound) {
 				message.WriteString(fmt.Sprintf("Процесс с pid='%v' не найден\n", pid))
 				continue
-			}
-
-			err = proc.Terminate()
-			if err != nil {
+			} else if errors.Is(err, proc.ErrFailedToTerminateProcess) {
 				message.WriteString(fmt.Sprintf("Не удалось завершить процесс с pid='%v'\n", pid))
 				continue
+			} else if err != nil {
+				message.WriteString(fmt.Sprintf("Что-то пошло не так при завершении процесса с pid='%v'", pid))
 			}
 
 			message.WriteString(fmt.Sprintf("Процесс с pid='%v' завершён\n", pid))
