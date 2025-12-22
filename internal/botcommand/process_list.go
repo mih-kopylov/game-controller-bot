@@ -3,10 +3,9 @@ package botcommand
 import (
 	"fmt"
 	"game-controller-bot/internal/botcontext"
-	"slices"
+	"game-controller-bot/internal/proc"
 	"strings"
 
-	"github.com/shirou/gopsutil/v4/process"
 	"gopkg.in/telebot.v4"
 )
 
@@ -40,7 +39,7 @@ func (c *ProcessListCommand) GetHandleFunc() telebot.HandlerFunc {
 			grep = strings.ToLower(context.Args()[0])
 		}
 
-		allProcesses, err := c.readAllProcesses(data, grep)
+		allProcesses, err := proc.ReadAllProcesses(nil, grep, data.SystemUser)
 		if err != nil {
 			return err
 		}
@@ -60,62 +59,4 @@ func (c *ProcessListCommand) GetHandleFunc() telebot.HandlerFunc {
 		}
 		return context.Send(message.String())
 	}
-}
-
-func (c *ProcessListCommand) readAllProcesses(data *botcontext.Data, grep string) ([]ProcessInfo, error) {
-	processes, err := process.Processes()
-	if err != nil {
-		return nil, err
-	}
-
-	var allProcesses []ProcessInfo
-	for _, p := range processes {
-		processName, _ := p.Name()
-		processExe, _ := p.Exe()
-		processUsername, _ := p.Username()
-		terminal, _ := p.Terminal()
-		parentPid, _ := p.Ppid()
-		if len(data.NamesToKill) > 0 && !slices.Contains(data.NamesToKill, strings.ToLower(processName)) {
-			continue
-		}
-		if data.SystemUser != "" && processUsername != data.SystemUser {
-			continue
-		}
-		if grep != "" && !strings.Contains(strings.ToLower(processName), grep) {
-			continue
-		}
-
-		allProcesses = append(
-			allProcesses, ProcessInfo{
-				Pid:       p.Pid,
-				Name:      processName,
-				User:      processUsername,
-				Exe:       processExe,
-				ParentPid: parentPid,
-				Terminal:  terminal,
-			},
-		)
-	}
-
-	slices.SortFunc(
-		allProcesses, func(a, b ProcessInfo) int {
-			if a.User != b.User {
-				return strings.Compare(a.User, b.User)
-			}
-			if a.Name != b.Name {
-				return strings.Compare(a.Name, b.Name)
-			}
-			return int(a.Pid - b.Pid)
-		},
-	)
-	return allProcesses, nil
-}
-
-type ProcessInfo struct {
-	Pid       int32
-	Name      string
-	User      string
-	Exe       string
-	ParentPid int32
-	Terminal  string
 }

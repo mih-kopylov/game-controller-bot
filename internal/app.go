@@ -18,6 +18,7 @@ func StartBot(version string) error {
 	}
 
 	bot.StartSelfUpdate(version)
+	bot.StartProcessesWatch()
 
 	bot.AddCommand(botcommand.NewStartCommand(bot.Context))
 

@@ -37,6 +37,6 @@ func (c *FilterRemoveCommand) GetHandleFunc() telebot.HandlerFunc {
 			return err
 		}
 
-		return NewUserListCommand(c.context).GetHandleFunc()(context)
+		return NewFilterListCommand(c.context).GetHandleFunc()(context)
 	}
 }
