@@ -187,18 +187,20 @@ func (b *TgBot) watchProcesses() error {
 		return err
 	}
 
-	for _, p := range processes {
-		log.Println(fmt.Sprintf("Process found %v (pid=%v)", p.Name, p.Pid))
-		err = proc.TermiateProcess(p.Pid)
-		if err != nil {
-			return err
-		}
-		log.Println(fmt.Sprintf("Process %v (pid=%v) is terminated", p.Name, p.Pid))
-		// Stopping loop because usually processes contains a process tree, where the first one is the root one
-		// When first is over, others disappear as well, and no need to look for them
-		// Next tick another process will be taken
+	if len(processes) == 0 {
 		return nil
 	}
 
+	// Stopping loop because usually processes contains a process tree, where the first one is the root one
+	// When first is over, others disappear as well, and no need to look for them
+	// Next tick another process will be taken
+	p := processes[0]
+	log.Printf("Process found %v (pid=%v)\n", p.Name, p.Pid)
+
+	err = proc.TermiateProcess(p.Pid)
+	if err != nil {
+		return err
+	}
+	log.Printf("Process %v (pid=%v) is terminated\n", p.Name, p.Pid)
 	return nil
 }
